@@ -1,0 +1,100 @@
+---
+description: Standard progress log format for agent responses in Cursor
+globs: app/**/*, components/**/*, lib/**/*, hooks/**/*, actions/**/*, supabase/**/*, docs/**/*, .cursor/**/*
+alwaysApply: true
+---
+
+- **Purpose**
+  - 모든 대화 응답에 일관된 "진행 로그"를 포함해, 탐색/검색/읽기/편집 내역과 다음 액션을 간결히 기록한다.
+
+- **Progress Log Template (copy-paste)**
+  ```text
+  [진행 로그]
+  - 목표: (이번 단계의 한 줄 목표)
+  - 계획: (가설/접근 요약 1줄)
+
+  - 실행
+    - 탐색: Explored {N} directories, {M} files
+    - 검색:
+      - query: "{검색어/정규식1}" scope: {dir or []=repo root}
+      - query: "{검색어/정규식2}" scope: {dir or []}
+    - 읽기:
+      - Read {filepathA}
+      - Read {filepathB}
+    - 편집:
+      - Edited {filepathC}: {변경 요약 1줄}
+      - Edited {filepathD}: {변경 요약 1줄}
+    - API/Server Actions:
+      - 호출/추가/변경: {액션 요약 1줄}
+      - endpoint/action: `{경로 또는 함수명}` status: {예상/결과}
+    - Database(Supabase):
+      - SQL/마이그레이션: {요약 1줄}
+      - 테이블/정책/RLS: {변경 또는 점검 요약}
+      - query: `SELECT ...` or migration: `{파일명}`
+    - FileSystem(코드/리소스):
+      - 생성/수정/삭제: `{filepath}` → {요약}
+      - 스키마/타입/컴포넌트 동기화 여부 확인
+    - Browser(MCP):
+      - nav: `{url}` | snapshot/screenshot 첨부 여부
+      - console/network: {핵심 로그/요청 요약}
+      - emulate/throttle: {적용 시 수치}
+    - 명령(제안만, 미실행):
+      - {command1}  # 이유: {한 줄}
+      - {command2}  # 이유: {한 줄}
+
+  - 결과
+    - 발견:
+      - {핵심 발견 1}
+      - {핵심 발견 2}
+    - 미발견/차선:
+      - {못 찾은 것과 대안 1줄}
+    - 결정:
+      - {채택한 접근/설계 결정 1줄}
+    - 리스크/의존성:
+      - {리스크 1줄} → 대응: {완화책 1줄}
+
+  - 로깅 포인트(필수)
+    - console.group("{기능/흐름명}")
+    - console.time("{구간명}") / console.timeEnd("{구간명}")
+    - console.log("{입력/파라미터}", data: {...})
+    - console.log("{주요 분기/검증 결과}", ok: boolean)
+    - console.groupEnd()
+
+  - 산출물/증적
+    - 코드 인용: 코드 레퍼런스 형식 사용 → ```startLine:endLine:filepath
+    - 제안 코드: 일반 코드 블록 사용 (언어 태그 포함)
+
+  - 다음 액션
+    - {바로 이어서 할 일 1줄}
+  ```
+
+- **Display Rules**
+  - 불필요한 장황함 금지, 핵심만 요약한다.
+  - 서버 실행/장시간 프로세스는 “제안만” 하고 실행하지 않는다.
+  - 파일/디렉토리/함수/클래스명은 항상 백틱으로 표기한다.
+  - 기존 코드 인용은 반드시 코드 레퍼런스 형식( start:end:filepath )을 사용한다.
+  - 새 코드 제안은 일반 코드 블록을 사용한다.
+
+- **Code Reference Example**
+  ```12:18:app/example.ts
+  export function add(a: number, b: number) {
+    return a + b;
+  }
+  ```
+
+- **New Code Example**
+  ```typescript
+  export function multiply(a: number, b: number): number {
+    console.group("multiply");
+    console.log("inputs", { a, b });
+    const result = a * b;
+    console.log("result", result);
+    console.groupEnd();
+    return result;
+  }
+  ```
+
+- **Chrome DevTools MCP (선택)**
+  - 웹 UI/동작 점검 필요 시 스냅샷/스크린샷/콘솔 로그를 첨부한다.
+  - 장시간 추적 작업은 제안만 하고 사용자 확인 후 실행한다.
+
